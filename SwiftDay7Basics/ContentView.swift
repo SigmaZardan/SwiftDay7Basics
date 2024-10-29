@@ -44,13 +44,9 @@ struct ContentView: View {
             .navigationTitle("IExpense")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                NavigationLink(value: "addExpense") {
-                    Text("Add Item")
+                NavigationLink("Add Item"){
+                    AddView(expenses: expenses)
                 }
-                    .navigationDestination(for: String.self) { _ in
-                        AddView(expenses: expenses)
-                    }
-                
             }
             
         }
