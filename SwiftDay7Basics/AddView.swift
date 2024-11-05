@@ -4,42 +4,53 @@
 //
 //  Created by Bibek Bhujel on 18/10/2024.
 //
-
+import SwiftData
 import SwiftUI
 
 struct AddView: View {
-    @State private var name = ""
-    @State private var type = "Personal"
-    @State private var amount = 0.0
+
+    @Bindable var expense: ExpenseItem
     @Environment(\.dismiss) var dismiss
-    var expenses:Expenses
     let types = ["Personal", "Business"]
     
     var body: some View {
-        NavigationStack {
             Form {
-                TextField("Name", text:$name)
-                
-                Picker("Type", selection: $type) {
-                    ForEach(types, id: \.self) {
-                        type in
-                        Text(type)
+                Section {
+                    TextField("Name", text:$expense.name)
+                }
+
+                Section {
+                    Picker("Type", selection: $expense.type) {
+                        ForEach(types, id: \.self) {
+                            type in
+                            Text(type)
+                        }
                     }
                 }
-                
-                TextField("Amount", value: $amount, format: .currency(code:Locale.current.currency?.identifier  ?? "NEP"))
+
+                Section {
+                    TextField("Amount", value: $expense.amount, format: .currency(code:Locale.current.currency?.identifier  ?? "NEP"))
+                }
             }.navigationTitle("Add Expense")
                 .toolbar {
                     Button("Add Expense", systemImage: "plus") {
-                        let expense = ExpenseItem(name:name, type:type, amount:amount)
-                        expenses.items.append(expense)
                         dismiss()
-                    }
+                    }.disabled(expense.name.isEmpty)
                 }
-        }
+                .navigationBarBackButtonHidden(expense.name.isEmpty)
     }
+
 }
 
 #Preview {
-    AddView(expenses: Expenses())
+    do {
+        let configs = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: ExpenseItem.self, configurations: configs)
+        let expense = ExpenseItem(name: "testItem", type: "Personal", amount: 12.89)
+
+        return AddView(expense: expense)
+            .modelContainer(container)
+    }catch {
+        return Text("Failed to create container: \(error.localizedDescription)")
+    }
 }

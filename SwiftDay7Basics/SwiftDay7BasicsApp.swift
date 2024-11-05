@@ -12,6 +12,6 @@ struct SwiftDay7BasicsApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-        }
+        }.modelContainer(for: ExpenseItem.self)
     }
 }
