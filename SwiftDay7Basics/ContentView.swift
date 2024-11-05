@@ -9,39 +9,13 @@ import SwiftUI
 
 struct ContentView: View {
 
-    @Query var expenses: [ExpenseItem]
+
     @State private var path = [ExpenseItem]()
     @Environment(\.modelContext) var modelContext
 
     var body: some View {
         NavigationStack(path:$path){
-            VStack{
-                VStack{
-                    Text("Personal Expense")
-                        .font(.title2.bold())
-                    List{
-                        ForEach(expenses) {
-                            item in
-                            if item.type == "Personal" {
-                                DisplayExpenseItem(itemName: item.name, itemType: item.type, itemAmount: item.amount, amountForegroundColor: addAmountForegroundColor(amount: item.amount))
-                            }
-                        }
-                        .onDelete(perform: removeItems)
-                    }
-                }
-                    VStack {
-                        Text("Business Expenses")
-                            .font(.title2.bold())
-                        List {
-                            ForEach(expenses) {
-                                item in
-                                if item.type == "Business" {
-                                    DisplayExpenseItem(itemName: item.name, itemType: item.type, itemAmount: item.amount, amountForegroundColor: addAmountForegroundColor(amount: item.amount))
-                                }
-                            }.onDelete(perform: removeItems)
-                        }
-                    }
-            }
+            DisplayExpensesView()
             .navigationTitle("IExpense")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: ExpenseItem.self) { expense in
@@ -54,16 +28,49 @@ struct ContentView: View {
                     modelContext.insert(expense)
                 }
             }
-            .onAppear(perform: deleteEmptyExpense)
         }
     }
 
+}
 
-    func deleteEmptyExpense() {
-        for expense in expenses {
-            if expense.name.isEmpty {
-                modelContext.delete(expense)
+struct DisplayExpensesView: View {
+    @Query var expenses: [ExpenseItem]
+    @Environment(\.modelContext) var modelContext
+
+    var body: some View {
+        VStack{
+            VStack{
+                Text("Personal Expense")
+                    .font(.title2.bold())
+                List{
+                    ForEach(expenses) {
+                        item in
+                        if item.type == "Personal" {
+                            DisplayExpenseCardView(itemName: item.name, itemType: item.type, itemAmount: item.amount, amountForegroundColor: addAmountForegroundColor(amount: item.amount))
+                        }
+                    }
+                    .onDelete(perform: removeItems)
+                }
             }
+                VStack {
+                    Text("Business Expenses")
+                        .font(.title2.bold())
+                    List {
+                        ForEach(expenses) {
+                            item in
+                            if item.type == "Business" {
+                                DisplayExpenseCardView(itemName: item.name, itemType: item.type, itemAmount: item.amount, amountForegroundColor: addAmountForegroundColor(amount: item.amount))
+                            }
+                        }.onDelete(perform: removeItems)
+                    }
+                }
+        }
+    }
+
+    func removeItems(at offsets: IndexSet) {
+        for offset in offsets {
+            let expense = expenses[offset]
+            modelContext.delete(expense)
         }
     }
 
@@ -78,18 +85,18 @@ struct ContentView: View {
             Color.black
         }
     }
-    
-    func removeItems(at offsets: IndexSet) {
-        for offset in offsets {
-            let expense = expenses[offset]
-            modelContext.delete(expense)
+
+    func deleteEmptyExpense() {
+        for expense in expenses {
+            if expense.name.isEmpty {
+                modelContext.delete(expense)
+            }
         }
     }
 }
 
 
-
-struct DisplayExpenseItem: View {
+struct DisplayExpenseCardView: View {
     let itemName:String
     let itemType: String
     let itemAmount: Double
