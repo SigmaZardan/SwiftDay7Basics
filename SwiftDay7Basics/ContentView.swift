@@ -9,23 +9,52 @@ import SwiftUI
 
 struct ContentView: View {
 
-
     @State private var path = [ExpenseItem]()
     @Environment(\.modelContext) var modelContext
 
+    @State private var sortOrder = [
+        SortDescriptor(\ExpenseItem.name),
+        SortDescriptor(\ExpenseItem.amount),
+    ]
+
     var body: some View {
         NavigationStack(path:$path){
-            DisplayExpensesView()
+            DisplayExpensesView(sortOrder: sortOrder)
             .navigationTitle("IExpense")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: ExpenseItem.self) { expense in
                 AddView(expense: expense)
             }
             .toolbar {
-                Button("Add expense", systemImage: "plus") {
-                    let expense = ExpenseItem(name: "", type: "Personal", amount: 0.0)
-                    path = [expense]
-                    modelContext.insert(expense)
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button("Add expense", systemImage: "plus") {
+                        let expense = ExpenseItem(name: "", type: "Personal", amount: 0.0)
+                        path = [expense]
+                        modelContext.insert(expense)
+                    }
+                }
+
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    Menu("Sort", systemImage: "arrow.up.arrow.down") {
+                        Picker("Sort", selection: $sortOrder) {
+                            Text("Sort by Name")
+                                .tag(
+                                    [
+                                        SortDescriptor(\ExpenseItem.name),
+                                        SortDescriptor(\ExpenseItem.amount),
+                                    ]
+                                )
+
+                            Text("Sor by Amount")
+                                .tag(
+                                    [
+                                        SortDescriptor(\ExpenseItem.amount),
+                                        SortDescriptor(\ExpenseItem.name),
+                                    ]
+                                )
+                        }
+                    }
+
                 }
             }
         }
@@ -36,6 +65,10 @@ struct ContentView: View {
 struct DisplayExpensesView: View {
     @Query var expenses: [ExpenseItem]
     @Environment(\.modelContext) var modelContext
+
+    init(sortOrder: [SortDescriptor<ExpenseItem>]) {
+        _expenses = Query(sort: sortOrder)
+    }
 
     var body: some View {
         VStack{
@@ -83,14 +116,6 @@ struct DisplayExpensesView: View {
         }
         else {
             Color.black
-        }
-    }
-
-    func deleteEmptyExpense() {
-        for expense in expenses {
-            if expense.name.isEmpty {
-                modelContext.delete(expense)
-            }
         }
     }
 }
