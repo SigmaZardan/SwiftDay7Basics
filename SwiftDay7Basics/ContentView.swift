@@ -17,9 +17,12 @@ struct ContentView: View {
         SortDescriptor(\ExpenseItem.amount),
     ]
 
+    let filterOptions = ["Personal Expenses", "Business Expenses", "Show All"]
+    @State private var filterOption = "Show All"
+
     var body: some View {
         NavigationStack(path:$path){
-            DisplayExpensesView(sortOrder: sortOrder)
+            DisplayExpensesView(filterOption: filterOption, sortOrder: sortOrder)
             .navigationTitle("IExpense")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: ExpenseItem.self) { expense in
@@ -45,7 +48,7 @@ struct ContentView: View {
                                     ]
                                 )
 
-                            Text("Sor by Amount")
+                            Text("Sort by Amount")
                                 .tag(
                                     [
                                         SortDescriptor(\ExpenseItem.amount),
@@ -55,6 +58,13 @@ struct ContentView: View {
                         }
                     }
 
+                    Menu("Filter", systemImage: "slider.horizontal.3") {
+                        Picker("Filter", selection: $filterOption) {
+                            ForEach(filterOptions, id: \.self) { filterOption in
+                                Text(filterOption)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -66,8 +76,15 @@ struct DisplayExpensesView: View {
     @Query var expenses: [ExpenseItem]
     @Environment(\.modelContext) var modelContext
 
-    init(sortOrder: [SortDescriptor<ExpenseItem>]) {
-        _expenses = Query(sort: sortOrder)
+    init(filterOption:String, sortOrder: [SortDescriptor<ExpenseItem>]) {
+        _expenses = Query(filter: #Predicate<ExpenseItem>{ expense in
+            if filterOption != "Show All" {
+                return filterOption == "Personal Expenses" ? expense.type == "Personal" : expense.type == "Business"
+            }
+            else {
+                return true
+            }
+        },sort: sortOrder)
     }
 
     var body: some View {
